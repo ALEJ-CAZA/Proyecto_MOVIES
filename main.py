@@ -45,3 +45,83 @@ def cantidad_filmaciones_mes( Mes ):
     cantidad_pelis = movies_credits_final[movies_credits_final['release_date'].dt.month == mes_a_numero].shape[0]
     
     return f"En {Mes} fueron estrenadas {cantidad_pelis} películas."
+
+@app.get("/{Dia}")
+
+def cantidad_filmaciones_dia(Dia):
+
+    #Importamos el csv final
+    movies_credits_final = pd.read_csv('dataset_final.csv')
+
+    #Nos aseguramos que la columna "release_date" este en formato datetime
+    movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
+    
+    #Si el dia se debe ingresar en español tendremos que usar el metodo dayofweek en la consulta, para eso debemos mapear
+    #los dias de la semana en su nombre en español a sus índices
+    semanaDia = {"lunes": 0,"martes": 1,"miércoles": 2,"jueves": 3,"viernes": 4,"sábado": 5,"domingo": 6}
+
+    #Pasamos a minuscula el dia ingresado en español en la consulta
+    dia_minuscula = Dia.lower()
+
+    #Si no se ha ingresado un día valido en español retornaremos el mensaje de advertencia
+    if dia_minuscula not in semanaDia:
+        return f"El día '{Dia}' no es válido. Por favor ingresar un día de la semana en español."
+    
+    #Nos quedamos con el indice del dia correspondiente
+    indiceDia = semanaDia[dia_minuscula]
+
+    #Ahora filtramos la cantidad de peliculas que se estrenaron en el dia ingresado
+    cantidad_pelis = movies_credits_final[movies_credits_final['release_date'].dt.dayofweek == indiceDia].shape[0]
+
+    return f"En los días {Dia} fueron estrenadas {cantidad_pelis} peliculas"
+
+@app.get("/{titulo_de_la_filmacion}")
+
+def score_titulo(titulo_de_la_filmacion ):
+   
+   #Importamos el csv final
+   movies_credits_final = pd.read_csv('dataset_final.csv')
+
+   #Nos aseguramos que la columna "release_date" este en formato datetime
+   movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
+
+   #Guardaremos en una variable los datos del df correpondiente al titulo ingresado. Aplicaremos minuscula
+   pelicula = movies_credits_final[movies_credits_final['title'].str.lower() == titulo_de_la_filmacion.lower()]
+   
+   #Si no se ha encontrado la pelicula, devolvemos un mensaje de advertencia
+   if pelicula.empty:
+      return f"El nombre de la película '{titulo_de_la_filmacion}' no se encontró en la consulta. Por favor intente otro nombre."
+    
+   #Si la pelicula se ha encontrado, retornamos los datos solicitados
+   año_estreno = pd.to_datetime(pelicula['release_date'].values[0]).year
+   titulo = pelicula['title'].values[0]
+   score = pelicula['popularity'].values[0]
+
+   return f"La película '{titulo}' se ha estrenado el año {año_estreno} y cuenta con {score} de puntaje de popularidad asignado por TMDB"
+
+@app.get("/{titulo_de_la_filmacion}")
+
+def votos_titulo(titulo_de_la_filmacion):
+   
+   #Importamos el csv final
+   movies_credits_final = pd.read_csv('dataset_final.csv')
+
+   #Nos aseguramos que la columna "release_date" este en formato datetime
+   movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
+
+   #Guardaremos en una variable los datos del df correpondiente al titulo ingresado. Aplicaremos minuscula
+   pelicula = movies_credits_final[movies_credits_final['title'].str.lower() == titulo_de_la_filmacion.lower()]
+
+   #Si no se ha encontrado la pelicula, devolvemos un mensaje de advertencia
+   if pelicula.empty:
+      return f"El nombre de la película '{titulo_de_la_filmacion}' no se encontró en la consulta. Por favor intente otro nombre."
+   
+   #Si la pelicula encontrada no tiene 2000 valoraciones o mas, informamos eso con un mensaje y pedimos otro titulo.
+   if pelicula['vote_count'].values[0] < 2000:
+      return f"La película '{titulo_de_la_filmacion}' no tiene al menos 2000 votos. Intente con otra pelicula por favor."
+   
+   cant_votos = pelicula['vote_count'].values[0]
+   promedio_votos = pelicula['vote_average'].values[0]
+   titulo = pelicula['title'].values[0]
+
+   return f"La pelicula {titulo} tiene {promedio_votos} en promedio de votos y cuenta con un total de {cant_votos} valoraciones"
