@@ -15,7 +15,7 @@ def read_root():
 def cantidad_filmaciones_mes( Mes ):
 
     #Importamos el csv final
-    movies_credits_final = pd.read_csv('movies_dataset.csv')
+    movies_credits_final = pd.read_csv('dataset_final.csv')
 
     #Nos aseguramos que la columna "release_date" este en formato datetime
     movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
