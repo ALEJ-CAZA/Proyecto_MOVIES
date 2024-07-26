@@ -10,7 +10,7 @@ def read_root():
     return {"NO TE OLVIDES DE AGREGAR /docs"}
 
 
-@app.get("/{Mes}")
+@app.get("/cantidad_filmaciones_mes/{Mes}")
 
 def cantidad_filmaciones_mes( Mes ):
 
@@ -46,7 +46,7 @@ def cantidad_filmaciones_mes( Mes ):
     
     return f"En {Mes} fueron estrenadas {cantidad_pelis} películas."
 
-@app.get("/{Dia}")
+@app.get("/cantidad_filmaciones_dia/{Dia}")
 
 def cantidad_filmaciones_dia(Dia):
 
@@ -75,31 +75,7 @@ def cantidad_filmaciones_dia(Dia):
 
     return f"En los días {Dia} fueron estrenadas {cantidad_pelis} peliculas"
 
-@app.get("/{titulo_de_la_filmacion}")
-
-def score_titulo(titulo_de_la_filmacion ):
-   
-   #Importamos el csv final
-   movies_credits_final = pd.read_csv('dataset_final.csv')
-
-   #Nos aseguramos que la columna "release_date" este en formato datetime
-   movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
-
-   #Guardaremos en una variable los datos del df correpondiente al titulo ingresado. Aplicaremos minuscula
-   pelicula = movies_credits_final[movies_credits_final['title'].str.lower() == titulo_de_la_filmacion.lower()]
-   
-   #Si no se ha encontrado la pelicula, devolvemos un mensaje de advertencia
-   if pelicula.empty:
-      return f"El nombre de la película '{titulo_de_la_filmacion}' no se encontró en la consulta. Por favor intente otro nombre."
-    
-   #Si la pelicula se ha encontrado, retornamos los datos solicitados
-   año_estreno = pd.to_datetime(pelicula['release_date'].values[0]).year
-   titulo = pelicula['title'].values[0]
-   score = pelicula['popularity'].values[0]
-
-   return f"La película '{titulo}' se ha estrenado el año {año_estreno} y cuenta con {score} de puntaje de popularidad asignado por TMDB"
-
-@app.get("/{titulo_de_la_filmacion}")
+@app.get("/votos_titulo/{titulo_de_la_filmacion}")
 
 def votos_titulo(titulo_de_la_filmacion):
    
@@ -125,3 +101,27 @@ def votos_titulo(titulo_de_la_filmacion):
    titulo = pelicula['title'].values[0]
 
    return f"La pelicula {titulo} tiene {promedio_votos} en promedio de votos y cuenta con un total de {cant_votos} valoraciones"
+
+@app.get("/score_titulo/{titulo_de_la_filmacion}")
+
+def score_titulo(titulo_de_la_filmacion):
+   
+   #Importamos el csv final
+   movies_credits_final = pd.read_csv('dataset_final.csv')
+
+   #Nos aseguramos que la columna "release_date" este en formato datetime
+   movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
+
+   #Guardaremos en una variable los datos del df correpondiente al titulo ingresado. Aplicaremos minuscula
+   pelicula = movies_credits_final[movies_credits_final['title'].str.lower() == titulo_de_la_filmacion.lower()]
+   
+   #Si no se ha encontrado la pelicula, devolvemos un mensaje de advertencia
+   if pelicula.empty:
+    return f"El nombre de la película '{titulo_de_la_filmacion}' no se encontró en la consulta. Por favor intente otro nombre."
+    
+   #Si la pelicula se ha encontrado, retornamos los datos solicitados
+   año_estreno = pelicula['release_year'].values[0]
+   titulo = pelicula['title'].values[0]
+   score = pelicula['popularity'].values[0]
+   
+   return f"La película '{titulo}' se ha estrenado el año {año_estreno} y cuenta con {score} de puntaje de popularidad asignado por TMDB"
