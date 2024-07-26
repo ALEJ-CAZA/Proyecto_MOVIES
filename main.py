@@ -125,3 +125,25 @@ def score_titulo(titulo_de_la_filmacion):
    score = pelicula['popularity'].values[0]
    
    return f"La película '{titulo}' se ha estrenado el año {año_estreno} y cuenta con {score} de puntaje de popularidad asignado por TMDB"
+
+@app.get("/get_actor/{nombre_actor}")
+
+def get_actor(nombre_actor):
+
+    #Primero nos aseguradmos que en "cast_name" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no cast information"
+    movies_credits_final['cast_name'] = movies_credits_final['cast_name'].fillna('[no cast information]')
+    
+    #Pasamos el nombre ingresado a minusculas
+    nombre_minuscula = nombre_actor.lower()
+    #Guardamos en una variable las filas o las peliculas del df donde se encuentre al actor, aplicando una forma que salve las minusculas
+    peliculas_actor = movies_credits_final[movies_credits_final['cast_name'].apply(lambda x: any(nombre_minuscula in actor.lower() for actor in x))]
+
+    #Si el actor ingresado no esta devolvemos un mensaje de advertencia
+    if peliculas_actor.empty:
+        return f"El actor {nombre_actor} no se ha encontrado en la consulta. Por favor intente con otro nombre."
+
+    retorno_actor = round(peliculas_actor['return'].sum(),2)
+    retorno_promedio = round(peliculas_actor['return'].mean(),2)
+    pelis_cantidad =  peliculas_actor['id'].shape[0]
+
+    return f"El actor {nombre_actor} participó en {pelis_cantidad} peliculas con un retorno total de {retorno_actor} en millones de dolares, y ha tenido un promedio de {retorno_promedio} en millones de dolares de retorno por pelicula."
