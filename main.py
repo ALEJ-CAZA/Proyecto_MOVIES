@@ -136,7 +136,7 @@ def get_actor(nombre_actor):
     movies_credits_final = pd.read_csv('dataset_final.csv')
 
     #Primero nos aseguradmos que en "cast_name" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no cast information"
-    movies_credits_final['cast_name'] = movies_credits_final['cast_name'].fillna('[no cast information]')
+    movies_credits_final['cast'] = movies_credits_final['cast'].fillna('[no cast information]')
     
     nombre_actor = [nombre_actor]
 
