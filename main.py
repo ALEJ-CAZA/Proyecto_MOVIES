@@ -70,7 +70,7 @@ def cantidad_filmaciones_dia(Dia):
     #Nos quedamos con el indice del dia correspondiente
     indiceDia = semanaDia[dia_minuscula]
 
-    #Ahora filtramos la cantidad de peliculas que se estrenaron en el dia ingresado
+    #Ahora filtramos la cantidad de peliculas que se estrenaron en el dia ingresado aplicando el siguiente filtro
     cantidad_pelis = movies_credits_final[movies_credits_final['release_date'].dt.dayofweek == indiceDia].shape[0]
 
     return f"En los días {Dia} fueron estrenadas {cantidad_pelis} peliculas"
@@ -96,6 +96,7 @@ def votos_titulo(titulo_de_la_filmacion):
    if pelicula['vote_count'].values[0] < 2000:
       return f"La película '{titulo_de_la_filmacion}' no tiene al menos 2000 votos. Intente con otra pelicula por favor."
    
+   #Creamos las variables que filtran la consulta para luego mostrar en el resultado de la funcion
    cant_votos = pelicula['vote_count'].values[0]
    promedio_votos = pelicula['vote_average'].values[0]
    titulo = pelicula['title'].values[0]
@@ -119,7 +120,8 @@ def score_titulo(titulo_de_la_filmacion):
    if pelicula.empty:
     return f"El nombre de la película '{titulo_de_la_filmacion}' no se encontró en la consulta. Por favor intente otro nombre."
     
-   #Si la pelicula se ha encontrado, retornamos los datos solicitados
+   #Si la pelicula se ha encontrado, retornamos los datos solicitados, crearemos las variables que filtran la consulta para luego
+   #mostrar en el resultado de la funcion
    año_estreno = pelicula['release_year'].values[0]
    titulo = pelicula['title'].values[0]
    score = pelicula['popularity'].values[0]
@@ -136,17 +138,42 @@ def get_actor(nombre_actor):
     #Primero nos aseguradmos que en "cast_name" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no cast information"
     movies_credits_final['cast_name'] = movies_credits_final['cast_name'].fillna('[no cast information]')
     
-    #Pasamos el nombre ingresado a minusculas
-    nombre_minuscula = nombre_actor.lower()
-    #Guardamos en una variable las filas o las peliculas del df donde se encuentre al actor, aplicando una forma que salve las minusculas
-    peliculas_actor = movies_credits_final[movies_credits_final['cast_name'].apply(lambda x: any(nombre_minuscula in actor.lower() for actor in x))]
+    nombre_actor = [nombre_actor]
 
-    #Si el actor ingresado no esta devolvemos un mensaje de advertencia
+    #Guardamos en una variable las filas o las peliculas del df donde se encuentre al actor
+    peliculas_actor = movies_credits_final[movies_credits_final['cast'].apply(lambda x: any(d in x for d in nombre_actor))]
+
+    #Si el actor ingresado no esta en la consulta devolvemos un mensaje de advertencia
     if peliculas_actor.empty:
-        return f"El actor {nombre_actor} no se ha encontrado en la consulta. Por favor intente con otro nombre."
+        return f"El actor {nombre_actor} no se ha encontrado. Por favor intente con otro nombre o intente escribiendo las primeras letras con mayuscula."
 
+    #Creamos las variables que filtran la consulta para luego mostrar en el resultado de la funcion
     retorno_actor = round(peliculas_actor['return'].sum(),2)
     retorno_promedio = round(peliculas_actor['return'].mean(),2)
     pelis_cantidad =  peliculas_actor['id'].shape[0]
+    nombre_actor = nombre_actor[0]
 
     return f"El actor {nombre_actor} participó en {pelis_cantidad} peliculas con un retorno total de {retorno_actor} en millones de dolares, y ha tenido un promedio de {retorno_promedio} en millones de dolares de retorno por pelicula."
+
+@app.get("/get_director/{nombre_director}")
+
+def get_director( nombre_director ): 
+
+    #Importamos el csv final
+    movies_credits_final = pd.read_csv('dataset_final.csv')
+
+    #Primero nos aseguradmos que en "director" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no director information"
+    movies_credits_final['director'] = movies_credits_final['director'].fillna('[no director information]')
+
+    #Guardamos en una variable las filas o las peliculas del df donde se encuentre al director
+    peliculas_director = movies_credits_final[movies_credits_final['director'] == nombre_director]
+
+    #Si el director ingresado no esta en la consulta devolvemos un mensaje de advertencia
+    if peliculas_director.empty:
+        return f"El director {nombre_director} no se ha encontrado. Por favor intente con otro nombre o intente escribiendo las primeras letras con mayuscula."
+    
+    #Creamos las variables que filtran la consulta para luego mostrar en el resultado de la funcion
+    retorno_director = round(peliculas_director['return'].sum(),2)
+    exito_director = f"El director {nombre_director} en sus peliculas tuvo un retorno total de {retorno_director} en millones de dolares"
+
+    return exito_director, peliculas_director[['title', 'release_date', 'budget', 'return']]   
