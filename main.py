@@ -15,7 +15,7 @@ def read_root():
 def cantidad_filmaciones_mes( Mes ):
 
     #Importamos el csv final
-    movies_credits_final = pd.read_csv('dataset_final.csv')
+    movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
 
     #Nos aseguramos que la columna "release_date" este en formato datetime
     movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
@@ -51,7 +51,7 @@ def cantidad_filmaciones_mes( Mes ):
 def cantidad_filmaciones_dia(Dia):
 
     #Importamos el csv final
-    movies_credits_final = pd.read_csv('dataset_final.csv')
+    movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
 
     #Nos aseguramos que la columna "release_date" este en formato datetime
     movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
@@ -80,7 +80,7 @@ def cantidad_filmaciones_dia(Dia):
 def votos_titulo(titulo_de_la_filmacion):
    
    #Importamos el csv final
-   movies_credits_final = pd.read_csv('dataset_final.csv')
+   movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
 
    #Nos aseguramos que la columna "release_date" este en formato datetime
    movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
@@ -108,7 +108,7 @@ def votos_titulo(titulo_de_la_filmacion):
 def score_titulo(titulo_de_la_filmacion):
    
    #Importamos el csv final
-   movies_credits_final = pd.read_csv('dataset_final.csv')
+   movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
 
    #Nos aseguramos que la columna "release_date" este en formato datetime
    movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
@@ -133,7 +133,7 @@ def score_titulo(titulo_de_la_filmacion):
 def get_actor(nombre_actor):
 
     #Importamos el csv final
-    movies_credits_final = pd.read_csv('dataset_final.csv')
+    movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
 
     #Primero nos aseguradmos que en "cast_name" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no cast information"
     movies_credits_final['cast'] = movies_credits_final['cast'].fillna('[no cast information]')
@@ -160,7 +160,7 @@ def get_actor(nombre_actor):
 def get_director( nombre_director ): 
 
     #Importamos el csv final
-    movies_credits_final = pd.read_csv('dataset_final.csv')
+    movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
 
     #Primero nos aseguradmos que en "director" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no director information"
     movies_credits_final['director'] = movies_credits_final['director'].fillna('[no director information]')
@@ -176,4 +176,55 @@ def get_director( nombre_director ):
     retorno_director = round(peliculas_director['return'].sum(),2)
     exito_director = f"El director {nombre_director} en sus peliculas tuvo un retorno total de {retorno_director} en millones de dolares"
 
-    return exito_director, peliculas_director[['title', 'release_date', 'budget', 'return']]   
+    return exito_director, peliculas_director[['title', 'release_date', 'budget', 'return']]
+
+@app.get("/recomendacion/{titulo}")
+
+def recomendacion(titulo):
+
+    #Importamos librerias a consumir
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.feature_extraction.text import HashingVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity 
+
+    #Importamos el csv final
+    movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
+
+    #Comenzaremos eligiendo una muestra filtrando el dataframe con las películas que se hayan estrendo a partir del año 1987
+    movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=15000, random_state=42)
+
+    #Convertimos a strig los datos de las columnas que usaremos para vectorizar
+    movies_muestra['overview'] = movies_muestra['overview'].astype(str)
+    movies_muestra['genres'] = movies_muestra['genres'].apply(lambda x: ' '.join(map(str, x)) if isinstance(x, list) else '')
+
+    #Se crea una columna que combine los valores de las que serán vectorizadas
+    movies_muestra['vectorizable'] = movies_muestra['overview'] + ' ' + movies_muestra['genres']
+
+    #Se pasa a minúsculas todos los textos para no influir en la cantidad generada
+    movies_muestra['vectorizable'] = movies_muestra['vectorizable'].str.lower()
+
+    #Inicializamos el HashingVectorizer para vectorizar el texto en una matriz de características. La dimensión de la matriz se establece en 2000.
+    hash_vectorizer = HashingVectorizer(stop_words='english', n_features=2000)
+
+    #Transformamos los datos
+    hash_matrix = hash_vectorizer.fit_transform(movies_muestra['vectorizable'])
+
+    #Se calcula la similitud coseno
+    matriz_de_similitud2 = cosine_similarity(hash_matrix)
+
+    #Obtenemos el índice de la película
+    indice_pelicula = movies_credits_final[movies_credits_final['title'].str.lower() == titulo.lower()].index
+    
+    #Si no está la película ingresada, enviamos un mensaeje
+    if indice_pelicula.empty:
+        return f"No se encontró la película con el título: {titulo}. Intente con el nombre original"
+    
+    # Obtener los índices de las películas más similares
+    peliculas_similares = matriz_de_similitud2[indice_pelicula[0]].argsort()[::-1]
+
+    # Obtener los títulos de las películas recomendadas
+    recomendaciones = movies_credits_final[['release_year','title']].iloc[peliculas_similares[1:6]]
+
+    recomendaciones = recomendaciones['title'].tolist()
+
+    return recomendaciones
