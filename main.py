@@ -1,8 +1,16 @@
-from typing import Union
-from fastapi import FastAPI
 import pandas as pd
+from fastapi import FastAPI
+import sklearn
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import HashingVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
 
 app = FastAPI()
+
+
+#Importamos el csv final que se va a usar en todos los endpoints
+movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
 
 
 @app.get("/")
@@ -180,38 +188,33 @@ def get_director( nombre_director ):
 
 @app.get("/recomendacion/{titulo}")
 
+#A continuación desarrollaremos en endpoint de machine learning
+#Comenzaremos eligiendo una muestra filtrando el dataframe con las películas que se hayan estrendo a partir del año 1987
+movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=5000, random_state=42)
+
+#Hacemos el preprocesamiento de los datos, convertimos a strig los datos de las columnas que usaremos para vectorizar
+movies_muestra['director'] = movies_muestra['director'].astype(str)
+movies_muestra['cast'] = movies_muestra['cast'].apply(lambda x: ' '.join(map(str, x)) if isinstance(x, list) else '')
+movies_muestra['genres'] = movies_muestra['genres'].apply(lambda x: ' '.join(map(str, x)) if isinstance(x, list) else '')
+movies_muestra['overview'] = movies_muestra['overview'].astype(str)
+
+#Se crea una columna que combine los valores de las que serán vectorizadas
+movies_muestra['vectorizable'] = movies_muestra['director'] + ' ' + movies_muestra['genres'] + ' ' + movies_muestra['cast'] + ' ' + movies_muestra['overview']
+
+#Se pasa a minúsculas todos los textos para no influir en la cantidad generada
+movies_muestra['vectorizable'] = movies_muestra['vectorizable'].str.lower()
+
+#Creamos una instancia de TfidfVectorizer para vectorizar el texto en una matriz de características
+tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_features=4000)
+
+#Transformar los datos
+tfidf_matrix = tfidf_vectorizer.fit_transform(movies_muestra['vectorizable'])
+
+#Se calcula la similitud coseno
+matriz_de_similitud2 = cosine_similarity(tfidf_matrix)
+
 def recomendacion(titulo):
-
-    #Importamos librerias a consumir   
-    from sklearn.feature_extraction.text import HashingVectorizer
-    from sklearn.metrics.pairwise import cosine_similarity 
-
-    #Importamos el csv final
-    movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
-
-    #Comenzaremos eligiendo una muestra filtrando el dataframe con las películas que se hayan estrendo a partir del año 1987
-    movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=5000, random_state=42)
-
-    #Convertimos a strig los datos de las columnas que usaremos para vectorizar
-    movies_muestra['director'] = movies_muestra['director'].astype(str)
-    movies_muestra['cast'] = movies_muestra['cast'].apply(lambda x: ' '.join(map(str, x)) if isinstance(x, list) else '')
-    movies_muestra['genres'] = movies_muestra['genres'].apply(lambda x: ' '.join(map(str, x)) if isinstance(x, list) else '')
-
-    #Se crea una columna que combine los valores de las que serán vectorizadas
-    movies_muestra['vectorizable'] = movies_muestra['director'] + ' ' + movies_muestra['genres'] + ' ' + movies_muestra['cast']
-
-    #Se pasa a minúsculas todos los textos para no influir en la cantidad generada
-    movies_muestra['vectorizable'] = movies_muestra['vectorizable'].str.lower()
-
-    #Inicializamos el HashingVectorizer para vectorizar el texto en una matriz de características.
-    hash_vectorizer = HashingVectorizer(stop_words='english', n_features=1000)
-
-    #Transformamos los datos
-    hash_matrix = hash_vectorizer.fit_transform(movies_muestra['vectorizable'])
-
-    #Se calcula la similitud coseno
-    matriz_de_similitud2 = cosine_similarity(hash_matrix)
-
+   
     #Obtenemos el índice de la película
     indice_pelicula = movies_credits_final[movies_credits_final['title'].str.lower() == titulo.lower()].index
     
