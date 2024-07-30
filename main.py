@@ -178,15 +178,14 @@ def get_director( nombre_director ):
 movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
 
 #Comenzaremos eligiendo una muestra filtrando el dataframe con las películas que se hayan estrendo a partir del año 1987
-movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=8000, random_state=42)
+movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=5000, random_state=42)
 
 #Hacemos el preprocesamiento de los datos, convertimos a strig los datos de las columnas que usaremos para vectorizar
 movies_muestra['director'] = movies_muestra['director'].astype(str)
-movies_muestra['cast'] = movies_muestra['cast'].apply(lambda x: ' '.join(map(str, x)) if isinstance(x, list) else '')
 movies_muestra['genres'] = movies_muestra['genres'].apply(lambda x: ' '.join(map(str, x)) if isinstance(x, list) else '')
 
 #Se crea una columna que combine los valores de las que serán vectorizadas
-movies_muestra['vectorizable'] = movies_muestra['director'] + ' ' + movies_muestra['genres'] + ' ' + movies_muestra['cast']
+movies_muestra['vectorizable'] = movies_muestra['director'] + ' ' + movies_muestra['genres']
 
 #Se pasa a minúsculas todos los textos para no influir en la cantidad generada
 movies_muestra['vectorizable'] = movies_muestra['vectorizable'].str.lower()
