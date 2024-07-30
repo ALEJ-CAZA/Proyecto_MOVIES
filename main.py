@@ -171,3 +171,52 @@ def get_director( nombre_director ):
     exito_director = f"El director {nombre_director} en sus peliculas tuvo un retorno total de {retorno_director} en millones de dolares"
 
     return exito_director, peliculas_director[['title', 'release_date', 'budget', 'return']]
+
+#A continuación desarrollaremos en endpoint de machine learning
+
+#Importamos el csv final
+movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
+
+#Comenzaremos eligiendo una muestra filtrando el dataframe con las películas que se hayan estrendo a partir del año 1987
+movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=80000, random_state=42)
+
+#Hacemos el preprocesamiento de los datos, convertimos a strig los datos de las columnas que usaremos para vectorizar
+movies_muestra['director'] = movies_muestra['director'].astype(str)
+movies_muestra['cast'] = movies_muestra['cast'].apply(lambda x: ' '.join(map(str, x)) if isinstance(x, list) else '')
+movies_muestra['genres'] = movies_muestra['genres'].apply(lambda x: ' '.join(map(str, x)) if isinstance(x, list) else '')
+
+#Se crea una columna que combine los valores de las que serán vectorizadas
+movies_muestra['vectorizable'] = movies_muestra['director'] + ' ' + movies_muestra['genres'] + ' ' + movies_muestra['cast']
+
+#Se pasa a minúsculas todos los textos para no influir en la cantidad generada
+movies_muestra['vectorizable'] = movies_muestra['vectorizable'].str.lower()
+
+#Creamos una instancia de TfidfVectorizer para vectorizar el texto en una matriz de características
+tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_features=3000)
+
+#Transformar los datos
+tfidf_matrix = tfidf_vectorizer.fit_transform(movies_muestra['vectorizable'])
+
+#Se calcula la similitud coseno
+matriz_de_similitud2 = cosine_similarity(tfidf_matrix)
+
+@app.get("/recomendacion/{titulo}")
+
+def recomendacion(titulo):
+   
+    #Obtenemos el índice de la película
+    indice_pelicula = movies_credits_final[movies_credits_final['title'].str.lower() == titulo.lower()].index
+    
+    #Si no está la película ingresada, enviamos un mensaeje
+    if indice_pelicula.empty:
+        return f"No se encontró la película con el título: {titulo}. Intente con el nombre original"
+    
+    # Obtener los índices de las películas más similares
+    peliculas_similares = matriz_de_similitud2[indice_pelicula[0]].argsort()[::-1]
+
+    # Obtener los títulos de las películas recomendadas
+    recomendaciones = movies_credits_final[['release_year','title']].iloc[peliculas_similares[1:6]]
+
+    recomendaciones = recomendaciones['title'].tolist()
+
+    return recomendaciones
