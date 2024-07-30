@@ -1,8 +1,6 @@
 import pandas as pd
 from fastapi import FastAPI
-import sklearn
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_extraction.text import HashingVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 
@@ -11,6 +9,9 @@ app = FastAPI()
 
 #Importamos el csv final que se va a usar en todos los endpoints
 movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
+
+#Nos aseguramos que la columna "release_date" este en formato datetime para cumplir los endpoints
+movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
 
 
 @app.get("/")
@@ -21,12 +22,6 @@ def read_root():
 @app.get("/cantidad_filmaciones_mes/{Mes}")
 
 def cantidad_filmaciones_mes( Mes ):
-
-    #Importamos el csv final
-    movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
-
-    #Nos aseguramos que la columna "release_date" este en formato datetime
-    movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
 
     #Convertimos el nombre del mes en español a número
     meses = {
@@ -57,12 +52,6 @@ def cantidad_filmaciones_mes( Mes ):
 @app.get("/cantidad_filmaciones_dia/{Dia}")
 
 def cantidad_filmaciones_dia(Dia):
-
-    #Importamos el csv final
-    movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
-
-    #Nos aseguramos que la columna "release_date" este en formato datetime
-    movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
     
     #Si el dia se debe ingresar en español tendremos que usar el metodo dayofweek en la consulta, para eso debemos mapear
     #los dias de la semana en su nombre en español a sus índices
@@ -86,13 +75,7 @@ def cantidad_filmaciones_dia(Dia):
 @app.get("/votos_titulo/{titulo_de_la_filmacion}")
 
 def votos_titulo(titulo_de_la_filmacion):
-   
-   #Importamos el csv final
-   movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
-
-   #Nos aseguramos que la columna "release_date" este en formato datetime
-   movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
-
+  
    #Guardaremos en una variable los datos del df correpondiente al titulo ingresado. Aplicaremos minuscula
    pelicula = movies_credits_final[movies_credits_final['title'].str.lower() == titulo_de_la_filmacion.lower()]
 
@@ -115,12 +98,6 @@ def votos_titulo(titulo_de_la_filmacion):
 
 def score_titulo(titulo_de_la_filmacion):
    
-   #Importamos el csv final
-   movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
-
-   #Nos aseguramos que la columna "release_date" este en formato datetime
-   movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
-
    #Guardaremos en una variable los datos del df correpondiente al titulo ingresado. Aplicaremos minuscula
    pelicula = movies_credits_final[movies_credits_final['title'].str.lower() == titulo_de_la_filmacion.lower()]
    
@@ -136,16 +113,15 @@ def score_titulo(titulo_de_la_filmacion):
    
    return f"La película '{titulo}' se ha estrenado el año {año_estreno} y cuenta con {score} de puntaje de popularidad asignado por TMDB"
 
+#Desarrollamos el endpoint de los actores
+
+#Primero nos aseguramos que en "cast" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no cast information"
+movies_credits_final['cast'] = movies_credits_final['cast'].fillna('[no cast information]')
+
 @app.get("/get_actor/{nombre_actor}")
 
 def get_actor(nombre_actor):
 
-    #Importamos el csv final
-    movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
-
-    #Primero nos aseguradmos que en "cast_name" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no cast information"
-    movies_credits_final['cast'] = movies_credits_final['cast'].fillna('[no cast information]')
-    
     nombre_actor = [nombre_actor]
 
     #Guardamos en una variable las filas o las peliculas del df donde se encuentre al actor
@@ -163,15 +139,14 @@ def get_actor(nombre_actor):
 
     return f"El actor {nombre_actor} participó en {pelis_cantidad} peliculas con un retorno total de {retorno_actor} en millones de dolares, y ha tenido un promedio de {retorno_promedio} en millones de dolares de retorno por pelicula."
 
+#Desarrollamos el endpoint del director
+
+#Primero nos aseguradmos que en "director" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no director information"
+movies_credits_final['director'] = movies_credits_final['director'].fillna('[no director information]')
+
 @app.get("/get_director/{nombre_director}")
 
 def get_director( nombre_director ): 
-
-    #Importamos el csv final
-    movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
-
-    #Primero nos aseguradmos que en "director" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no director information"
-    movies_credits_final['director'] = movies_credits_final['director'].fillna('[no director information]')
 
     #Guardamos en una variable las filas o las peliculas del df donde se encuentre al director
     peliculas_director = movies_credits_final[movies_credits_final['director'] == nombre_director]
@@ -190,7 +165,7 @@ def get_director( nombre_director ):
 #A continuación desarrollaremos en endpoint de machine learning
 
 #Comenzaremos eligiendo una muestra filtrando el dataframe con las películas que se hayan estrendo a partir del año 1987
-movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=5000, random_state=42)
+movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=15000, random_state=42)
 
 #Hacemos el preprocesamiento de los datos, convertimos a strig los datos de las columnas que usaremos para vectorizar
 movies_muestra['director'] = movies_muestra['director'].astype(str)
@@ -205,14 +180,13 @@ movies_muestra['vectorizable'] = movies_muestra['director'] + ' ' + movies_muest
 movies_muestra['vectorizable'] = movies_muestra['vectorizable'].str.lower()
 
 #Creamos una instancia de TfidfVectorizer para vectorizar el texto en una matriz de características
-tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_features=4000)
+tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_features=10000)
 
 #Transformar los datos
 tfidf_matrix = tfidf_vectorizer.fit_transform(movies_muestra['vectorizable'])
 
 #Se calcula la similitud coseno
 matriz_de_similitud2 = cosine_similarity(tfidf_matrix)
-
 
 @app.get("/recomendacion/{titulo}")
 
