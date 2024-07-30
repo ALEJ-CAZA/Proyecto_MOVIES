@@ -12,7 +12,7 @@ Los datos usados para realizar el MVP se encuentran en dos archivos formato csv 
 
  ## De este repositorio
 
-- "_pycache_" y "entorno_movies" son carpetas de archivos del entorno creado localmente.
+- "_pycache_" y "entorno_movies" son carpetas de archivos del entorno virtual creado en python con venv.
 - ".gitattributes" archivo de texto utilizado en Git para asignar atributos a archivos y directorios dentro de un repositorio.
 - "Noteb_ETL_y_EDA_endpoints.ipynb" el notebook donde se realizo todo el ETL y el EDA, también se hicieron allí los endpoints.
 - "dataset_final.csv" el archivo csv que se exporta luego del ETL para ser consumido por la API en los endpoints.
@@ -32,7 +32,7 @@ Todos estos cambios se pueden encontrar en el notebook de nombre "Noteb_ETL_y_ED
 
 ## Endpoints del MVP
 
-Luego de exportar a un nuevo archivo dataset_final.csv cuando se terminó el ETL, comenzamos a desarrollar los endpoints solicitados en el mismo archivo "Noteb_ETL_y_EDA_endpoints.ipynb", para luego transcribirlos al archivo "main.py" donde estaría todo el desarrollo de la API a traves del uso del framework FastAPI. Dicho desarrollo fue, seguidamente, deployado en la plataforma RENDER donde se puede corrobar a traves de este link: https://proyecto-movies-fm8m.onrender.com/docs que todas las funciones deployadas cumplen su consulta.
+Luego de exportar a un nuevo archivo dataset_final.csv cuando se terminó el ETL, comenzamos a desarrollar los endpoints solicitados en el mismo archivo "Noteb_ETL_y_EDA_endpoints.ipynb", para luego transcribirlos al archivo "main.py" donde estaría todo el desarrollo de la API a traves del uso del framework FastAPI. Dicho desarrollo fue, seguidamente, deployado en la plataforma RENDER donde se puede corrobar a traves de este link: https://proyecto-movies-fm8m.onrender.com/docs que todas las funciones deployadas cumplen su consulta.                         
 
 ## Machine Learning
 
