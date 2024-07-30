@@ -6,13 +6,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 app = FastAPI()
 
-
 #Importamos el csv final que se va a usar en todos los endpoints
 movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
-
-#Nos aseguramos que la columna "release_date" este en formato datetime para cumplir los endpoints
-movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
-
 
 @app.get("/")
 def read_root():
@@ -22,6 +17,9 @@ def read_root():
 @app.get("/cantidad_filmaciones_mes/{Mes}")
 
 def cantidad_filmaciones_mes( Mes ):
+
+    #Nos aseguramos que la columna "release_date" este en formato datetime para cumplir los endpoints
+    movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
 
     #Convertimos el nombre del mes en español a número
     meses = {
@@ -52,6 +50,9 @@ def cantidad_filmaciones_mes( Mes ):
 @app.get("/cantidad_filmaciones_dia/{Dia}")
 
 def cantidad_filmaciones_dia(Dia):
+
+    #Nos aseguramos que la columna "release_date" este en formato datetime para cumplir los endpoints
+    movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
     
     #Si el dia se debe ingresar en español tendremos que usar el metodo dayofweek en la consulta, para eso debemos mapear
     #los dias de la semana en su nombre en español a sus índices
@@ -113,15 +114,12 @@ def score_titulo(titulo_de_la_filmacion):
    
    return f"La película '{titulo}' se ha estrenado el año {año_estreno} y cuenta con {score} de puntaje de popularidad asignado por TMDB"
 
-#Desarrollamos el endpoint de los actores
-
-#Primero nos aseguramos que en "cast" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no cast information"
-movies_credits_final['cast'] = movies_credits_final['cast'].fillna('[no cast information]')
-
 @app.get("/get_actor/{nombre_actor}")
 
 def get_actor(nombre_actor):
 
+    #Primero nos aseguramos que en "cast" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no cast information"
+    movies_credits_final['cast'] = movies_credits_final['cast'].fillna('[no cast information]')
     nombre_actor = [nombre_actor]
 
     #Guardamos en una variable las filas o las peliculas del df donde se encuentre al actor
@@ -139,14 +137,12 @@ def get_actor(nombre_actor):
 
     return f"El actor {nombre_actor} participó en {pelis_cantidad} peliculas con un retorno total de {retorno_actor} en millones de dolares, y ha tenido un promedio de {retorno_promedio} en millones de dolares de retorno por pelicula."
 
-#Desarrollamos el endpoint del director
-
-#Primero nos aseguradmos que en "director" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no director information"
-movies_credits_final['director'] = movies_credits_final['director'].fillna('[no director information]')
-
 @app.get("/get_director/{nombre_director}")
 
-def get_director( nombre_director ): 
+def get_director( nombre_director ):
+
+    #Primero nos aseguradmos que en "director" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no director information"
+    movies_credits_final['director'] = movies_credits_final['director'].fillna('[no director information]')
 
     #Guardamos en una variable las filas o las peliculas del df donde se encuentre al director
     peliculas_director = movies_credits_final[movies_credits_final['director'] == nombre_director]
