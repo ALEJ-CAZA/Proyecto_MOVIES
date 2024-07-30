@@ -6,9 +6,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 app = FastAPI()
 
-#Importamos el csv final que se va a usar en todos los endpoints
-movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
-
 @app.get("/")
 def read_root():
     return {"NO TE OLVIDES DE AGREGAR /docs"}
@@ -17,6 +14,9 @@ def read_root():
 @app.get("/cantidad_filmaciones_mes/{Mes}")
 
 def cantidad_filmaciones_mes( Mes ):
+
+    #Importamos el csv final
+    movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
 
     #Nos aseguramos que la columna "release_date" este en formato datetime para cumplir los endpoints
     movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
@@ -51,6 +51,9 @@ def cantidad_filmaciones_mes( Mes ):
 
 def cantidad_filmaciones_dia(Dia):
 
+    #Importamos el csv final
+    movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
+    
     #Nos aseguramos que la columna "release_date" este en formato datetime para cumplir los endpoints
     movies_credits_final['release_date'] = pd.to_datetime(movies_credits_final['release_date'])
     
@@ -77,6 +80,9 @@ def cantidad_filmaciones_dia(Dia):
 
 def votos_titulo(titulo_de_la_filmacion):
   
+   #Importamos el csv final
+   movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
+
    #Guardaremos en una variable los datos del df correpondiente al titulo ingresado. Aplicaremos minuscula
    pelicula = movies_credits_final[movies_credits_final['title'].str.lower() == titulo_de_la_filmacion.lower()]
 
@@ -99,6 +105,9 @@ def votos_titulo(titulo_de_la_filmacion):
 
 def score_titulo(titulo_de_la_filmacion):
    
+   #Importamos el csv final
+   movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
+   
    #Guardaremos en una variable los datos del df correpondiente al titulo ingresado. Aplicaremos minuscula
    pelicula = movies_credits_final[movies_credits_final['title'].str.lower() == titulo_de_la_filmacion.lower()]
    
@@ -118,6 +127,9 @@ def score_titulo(titulo_de_la_filmacion):
 
 def get_actor(nombre_actor):
 
+    #Importamos el csv final
+    movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
+    
     #Primero nos aseguramos que en "cast" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no cast information"
     movies_credits_final['cast'] = movies_credits_final['cast'].fillna('[no cast information]')
     nombre_actor = [nombre_actor]
@@ -141,6 +153,9 @@ def get_actor(nombre_actor):
 
 def get_director( nombre_director ):
 
+    #Importamos el csv final
+    movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
+    
     #Primero nos aseguradmos que en "director" no hayan quedado nulos luego del merge, y si hay nulos cambiar por "no director information"
     movies_credits_final['director'] = movies_credits_final['director'].fillna('[no director information]')
 
@@ -159,6 +174,9 @@ def get_director( nombre_director ):
 
 
 #A continuación desarrollaremos en endpoint de machine learning
+
+#Importamos el csv final
+movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
 
 #Comenzaremos eligiendo una muestra filtrando el dataframe con las películas que se hayan estrendo a partir del año 1987
 movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=10000, random_state=42)
