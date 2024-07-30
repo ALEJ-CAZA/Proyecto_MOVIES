@@ -178,7 +178,7 @@ def get_director( nombre_director ):
 movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
 
 #Comenzaremos eligiendo una muestra filtrando el dataframe con las películas que se hayan estrendo a partir del año 1987
-movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=80000, random_state=42)
+movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=8000, random_state=42)
 
 #Hacemos el preprocesamiento de los datos, convertimos a strig los datos de las columnas que usaremos para vectorizar
 movies_muestra['director'] = movies_muestra['director'].astype(str)
