@@ -165,7 +165,7 @@ def get_director( nombre_director ):
 #A continuación desarrollaremos en endpoint de machine learning
 
 #Comenzaremos eligiendo una muestra filtrando el dataframe con las películas que se hayan estrendo a partir del año 1987
-movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=15000, random_state=42)
+movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=10000, random_state=42)
 
 #Hacemos el preprocesamiento de los datos, convertimos a strig los datos de las columnas que usaremos para vectorizar
 movies_muestra['director'] = movies_muestra['director'].astype(str)
@@ -180,7 +180,7 @@ movies_muestra['vectorizable'] = movies_muestra['director'] + ' ' + movies_muest
 movies_muestra['vectorizable'] = movies_muestra['vectorizable'].str.lower()
 
 #Creamos una instancia de TfidfVectorizer para vectorizar el texto en una matriz de características
-tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_features=10000)
+tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_features=5000)
 
 #Transformar los datos
 tfidf_matrix = tfidf_vectorizer.fit_transform(movies_muestra['vectorizable'])
