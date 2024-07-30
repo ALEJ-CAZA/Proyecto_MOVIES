@@ -186,9 +186,9 @@ def get_director( nombre_director ):
 
     return exito_director, peliculas_director[['title', 'release_date', 'budget', 'return']]
 
-@app.get("/recomendacion/{titulo}")
 
 #A continuación desarrollaremos en endpoint de machine learning
+
 #Comenzaremos eligiendo una muestra filtrando el dataframe con las películas que se hayan estrendo a partir del año 1987
 movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=5000, random_state=42)
 
@@ -212,6 +212,9 @@ tfidf_matrix = tfidf_vectorizer.fit_transform(movies_muestra['vectorizable'])
 
 #Se calcula la similitud coseno
 matriz_de_similitud2 = cosine_similarity(tfidf_matrix)
+
+
+@app.get("/recomendacion/{titulo}")
 
 def recomendacion(titulo):
    
