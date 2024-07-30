@@ -194,7 +194,7 @@ movies_muestra['vectorizable'] = movies_muestra['director'] + ' ' + movies_muest
 movies_muestra['vectorizable'] = movies_muestra['vectorizable'].str.lower()
 
 #Creamos una instancia de TfidfVectorizer para vectorizar el texto en una matriz de características
-tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_features=5000)
+tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_features=4000)
 
 #Transformar los datos
 tfidf_matrix = tfidf_vectorizer.fit_transform(movies_muestra['vectorizable'])
