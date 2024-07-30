@@ -182,8 +182,7 @@ def get_director( nombre_director ):
 
 def recomendacion(titulo):
 
-    #Importamos librerias a consumir
-    from sklearn.feature_extraction.text import TfidfVectorizer
+    #Importamos librerias a consumir   
     from sklearn.feature_extraction.text import HashingVectorizer
     from sklearn.metrics.pairwise import cosine_similarity 
 
@@ -191,7 +190,7 @@ def recomendacion(titulo):
     movies_credits_final = pd.read_csv('dataset_final.csv', index_col=0)
 
     #Comenzaremos eligiendo una muestra filtrando el dataframe con las películas que se hayan estrendo a partir del año 1987
-    movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=15000, random_state=42)
+    movies_muestra = movies_credits_final[(movies_credits_final['release_year'] >= 1987)].sample(n=10000, random_state=42)
 
     #Convertimos a strig los datos de las columnas que usaremos para vectorizar
     movies_muestra['overview'] = movies_muestra['overview'].astype(str)
@@ -203,8 +202,8 @@ def recomendacion(titulo):
     #Se pasa a minúsculas todos los textos para no influir en la cantidad generada
     movies_muestra['vectorizable'] = movies_muestra['vectorizable'].str.lower()
 
-    #Inicializamos el HashingVectorizer para vectorizar el texto en una matriz de características. La dimensión de la matriz se establece en 2000.
-    hash_vectorizer = HashingVectorizer(stop_words='english', n_features=2000)
+    #Inicializamos el HashingVectorizer para vectorizar el texto en una matriz de características. La dimensión de la matriz se establece en 1000.
+    hash_vectorizer = HashingVectorizer(stop_words='english', n_features=1000)
 
     #Transformamos los datos
     hash_matrix = hash_vectorizer.fit_transform(movies_muestra['vectorizable'])
